@@ -78,6 +78,29 @@
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
+        .cycle-details {
+            margin-top: 20px;
+            width: 100%;
+        }
+        .cycle-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .cycle-table th {
+            background-color: #f5f5f5;
+            padding: 8px;
+            text-align: left;
+            border-bottom: 2px solid #ddd;
+        }
+        .cycle-table td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .cycle-container {
+            display: none;
+        }
         button {
             background-color: #4CAF50;
             color: white;
@@ -136,9 +159,35 @@
         <div class="charts-container">
             <div class="chart-wrapper">
                 <canvas id="batteryChart"></canvas>
+                <div id="batteryCycleContainer" class="cycle-container">
+                    <h3>Battery Discharge Cycles</h3>
+                    <table class="cycle-table">
+                        <thead>
+                            <tr>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Energy (kWh)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="batteryCycleList"></tbody>
+                    </table>
+                </div>
             </div>
             <div class="chart-wrapper">
                 <canvas id="pvChart"></canvas>
+                <div id="pvCycleContainer" class="cycle-container">
+                    <h3>PV Production Cycles</h3>
+                    <table class="cycle-table">
+                        <thead>
+                            <tr>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Energy (kWh)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pvCycleList"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -246,6 +295,20 @@
             }
         }
 
+        function formatTimestamp(timestamp) {
+            return new Date(timestamp).toLocaleString();
+        }
+
+        function generateCycleHTML(cycles) {
+            return cycles.map(cycle => `
+                <tr>
+                    <td>${formatTimestamp(cycle.startTime)}</td>
+                    <td>${formatTimestamp(cycle.endTime)}</td>
+                    <td>${cycle.peakValue.toFixed(2)}</td>
+                </tr>
+            `).join('');
+        }
+
         function processExcelFile(file) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -282,6 +345,14 @@
                     <p>Total Cycles: ${pvCycles.length}</p>
                     <p>Total Energy: ${pvTotal.toFixed(2)} kWh</p>
                 `;
+
+                // Show and update cycle containers
+                document.getElementById('batteryCycleContainer').style.display = 'block';
+                document.getElementById('pvCycleContainer').style.display = 'block';
+                
+                // Update cycle details
+                document.getElementById('batteryCycleList').innerHTML = generateCycleHTML(batteryCycles);
+                document.getElementById('pvCycleList').innerHTML = generateCycleHTML(pvCycles);
 
                 // Create charts
                 createChart('batteryChart', 'Battery Discharge', timestamps, batteryValues);
